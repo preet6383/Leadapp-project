@@ -7,8 +7,24 @@ pipeline{
             }
         }
         stage ("Maven Build") {
+             steps{
                 sh "mvn clean package" 
+                sh "mv target/*.war target/Jenkins-Declarative-Demo.war"
+                }
         }
     }
-    
+        stage ("deploy-dev") {
+             steps{
+                sshagent (['tomcat-new'])  {
+                sh  """
+                   scp -o StrictHostKeyChecking=no  target/Jenkins-Declarative-Demo.war   ec2-user@172.31.11.142: /home/ec2-user/apache-tomcat-9.0.62/webapps
+                   ssh ec2-user@172.31.11.142 /home/ec2-user/apache-tomcat-9.0.62/bin/shutdown.sh
+                   ssh ec2-user@172.31.11.142 /home/ec2-user/apache-tomcat-9.0.62/bin/startup.sh
+                   
+                   """
+                   }
+             
+             }
+             
+        }
 }
